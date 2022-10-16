@@ -1,20 +1,39 @@
+/*RCS Team 2 Program
+ * IF YOU ARE TESTING BE SURE TO COMMENT OUT PARTS OF CODE YOU ARE NOT USING
+ * IF USING THE SERIAL MONITOR TO READ DATA, CHANGE ALL SDCARD.PRINT TO SERIAL.PRINT OTHERWISE YOU WILL NOT SEE ANYTHING
+ */
+
 #include <SoftwareSerial.h>
 #include <Arduino_LSM6DSOX.h>
 #include <BMP388_DEV.h> 
 #include <Wire.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 
-//information
-float temperature, pressure, altitude, flighttime, startingaltitude, maxalt;
+float temperature, pressure, altitude, flighttime, startingaltitude, maxalt; //sensor values, do not need to be assigned
 BMP388_DEV bmp388;
 SoftwareSerial SDCard (0, 1):
 SFE_UBLOX_GNSS myGNSS;
 
-int const LedPin = 3, SolenoidClockwise = 4, SolenoidCounterClockwise = 5, camera = 6;
-float altForStabilization = 25000, gyroscopestop = 0.5f;
-int ledcounter = 4, pictureOnTime = 50, videoOnTime = 200, videoWaitTime = 1200, packetcount, launchstate;
-bool stabilize, stabilizealt, assending, pictureOn, videoOnUpdate, videoOnMain;
-long lastTime = 0; //for ZOE
+int const ledPin = 3;                                            //New Energy Led Pin
+int const SolenoidClockwise = 4;                                 //pin for Solenoid Clockwise
+int const SolenoidCounterClockwise = 5;                          //pin for Solenoid Counter Clockwise
+int const camera = 6;                                            //pin for camera
+float altForStabilization = 25000;                               //altitude that satbilization will start
+float gyroscopestop = 0.5f;                                      //gyroscope limiter to detect when it has stopped moving
+float minDegSec = 30;                                            //target degrees/second of spin, enable solenoids when passed in the positive or negative direction
+int ledcounter = 4;                                              //the amount of time between blinks (ledcounter/4) = the amount of blinks per second
+int pictureOnTime = 50;                                          //the delay between signals for picture taking
+int videoOnTime = 200;                                           //the delay between signals for starting and stopping video
+int videoWaitTime = 1200;                                        //the length of the video we want to record (videoWaitTime/240) = the amount of time in minutes that we are recording
+int packetcount;                                                 //amount of packets we've collected
+int launchstate;                                                 //what state the vehicle is in
+bool stabilize;                                                  //bool to enable stabilization
+bool stabilizealt;                                               //bool to signal if the altitude has been passed to start stabilizing
+bool ascending;                                                  //bool signaling if the vehicle is ascending or not
+bool pictureOn;                                                  //bool to take pictures
+bool videoOnUpdate;                                              //bool to take videos
+bool videoOnMain;                                                //determines if we are starting a new video or stopping a old one
+long lastTime = 0; //for ZOE                                     //long for ZOE (I don't actually know how this works, it was just in the example)
 
 void setup() 
 {
@@ -25,7 +44,7 @@ void setup()
   pinMode(SolenoidClockwise, OUTPUT);
   pinMode(SolenoidCounterClockwise, OUTPUT);
   pinMode(camera, OUTPUT);
-  pinMode(LedPin, OUTPUT);  
+  pinMode(ledPin, OUTPUT);  
   stabilize = false;
   stabilizealt = false;
   videoOnMain = false;
@@ -37,12 +56,12 @@ void setup()
   bmp388.startNormalConversion();
   startingaltitude = bmp388.getMeasurements(altitude);
   if (myGNSS.begin() == false) //Connect to the u-blox module using Wire port {
-    SDCard.println(F("u-blox GNSS not detected at default I2C address. Please check wiring. Freezing."));
+    SDCard.println(F("GPS did not work you idiot. Freezing."));
     while (1);
   }
   while(!IMU.begin() || !bmp388.begin()){
     SDcard.println("sensor initiation failed")
-    digitalWrite(LedPin, HIGH);
+    digitalWrite(ledPin, HIGH);
   }  
   
   myGNSS.setI2COutput(COM_TYPE_UBX);
@@ -87,7 +106,7 @@ void loop() {                                                   //loop function,
   } else { SDCard.print("-, -, -, ");
 
   float ax, ay, az;
-  if (IMU.accelerationAvailable()) {
+  if (IMU.accelerationAvailable()) {                            //IMU data acceleration
     IMU.readAcceleration(ax, ay, az);
 
     SDCard.print(ax); SDcard.print(", ");
@@ -96,7 +115,7 @@ void loop() {                                                   //loop function,
   }
   
   float gx, gy, gz;
-  if (IMU.gyroscopeAvailable()) {                               //IMU data (in deg/sec)
+  if (IMU.gyroscopeAvailable()) {                               //IMU data gyro(in deg/sec)
     
     IMU.readGyroscope(gx, gy, gz);
 
@@ -109,7 +128,7 @@ void loop() {                                                   //loop function,
 
 //determine state of vehicle ------------------------------------------------------------------------------------------------------------------------------------------------ NEEDS TESTING
 
-  if(launchstate == 0 && (altitude+25) > startingalt) { launchstate = 1; }                                      //assending
+  if(launchstate == 0 && (altitude+25) > startingalt) { launchstate = 1; }                                      //ascending
   if(launchstate == 1 && altitude > altforstabilization) { launchstate = 2; }                                   //control active
   if(launchstate == 2 && !stabilization) {launchstate = 3; }                                                    //control deactive
   if(launchstate == 3 && stabilization) { launchstate = 2; }                                                    //control deactive
@@ -122,11 +141,11 @@ void loop() {                                                   //loop function,
   if(altitude >= altForStabilization) {stabilizealt = true);                 //turn on at altitude
   else { stabilizealt = false; }
   
-  if(gy >= 30 && stabilizealt) {                               //determine if we need to turn on Clockwise Solenoid
+  if(gy >= minDegSec && stabilizealt) {                               //determine if we need to turn on Clockwise Solenoid
     digitalWrite(SolenoidClockwise, HIGH);
   } else { digitalWrite(SolenoidClockwise, LOW); }
-  
-  if(gy <= -30 && stabilizealt) {                               //determine if we need to turn on Counter Clockwise Solenoid
+ 
+  if(gy <= -minDegSec && stabilizealt) {                               //determine if we need to turn on Counter Clockwise Solenoid
     digitalWrite(SolenoidCounterClockwise, HIGH);
   } else { digitalWrite(SolenoidCounterClockwise, LOW); }
 
@@ -191,10 +210,10 @@ void loop() {                                                   //loop function,
 //extra ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
   if(ledcounter >= 4) {                                        //blink leds every 1/4 second, if ledcounter is increased, then time between blinks increases (ex. ledcounter = 8 then leds will blink every 2 seconds
-    digitalWrite(LedPin, HIGH);
+    digitalWrite(ledPin, HIGH);
     ledcounter = 1;
   } else { 
-    digitalWrite (LedPin, LOW);
+    digitalWrite (ledPin, LOW);
     ledcounter += 1;
   }
 
