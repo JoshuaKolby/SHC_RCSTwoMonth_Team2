@@ -12,8 +12,8 @@ SFE_UBLOX_GNSS myGNSS;
 
 int const LedPin = 3, SolenoidClockwise = 4, SolenoidCounterClockwise = 5, camera = 6;
 float altForStabilization = 25000, gyroscopestop = 0.5f;
-int ledcounter = 4, packetcount, launchstate;
-bool stabilize, stabilizealt, assending;
+int ledcounter = 4, pictureOnTime = 50, videoOnTime = 200, videoWaitTime = 1200, packetcount, launchstate;
+bool stabilize, stabilizealt, assending, pictureOn, videoOnUpdate, videoOnMain;
 long lastTime = 0; //for ZOE
 
 void setup() 
@@ -28,6 +28,7 @@ void setup()
   pinMode(LedPin, OUTPUT);  
   stabilize = false;
   stabilizealt = false;
+  videoOnMain = false;
   flighttime = 0; packetcount = 0; launchstate = 0;
   
   IMU.begin();                                                  //begin sensors
@@ -47,7 +48,7 @@ void setup()
   myGNSS.setI2COutput(COM_TYPE_UBX);
   myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
   
-  SDCard.println("TEAM_ID, MISSION_TIME, PACKET_COUNT, SW_STATE, CAM_STATE, PRESSURE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z, LAT, LONG, SIV");
+  SDCard.println("TEAM_ID, MISSION_TIME, PACKET_COUNT, SW_STATE, CAM_STATE, REAL_TIME, LAT, LONG, SIV, PRESSURE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z");
 }
 
 void loop() {                                                   //loop function, make sure last print statement is println, but no other print statements are
@@ -59,6 +60,24 @@ void loop() {                                                   //loop function,
   SDCard.print(packetcount); SDcard.print(", ");
   SDCard.print(launchstate); SDcard.print(", ");
   SDCard.print("Camera state"); SDcard.print(", ");
+
+  if (millis() - lastTime > 1000)                               //GPS Data (Lat, Long, SIV)
+  {
+    lastTime = millis();
+
+    SDcard.print(myGNSS.getHour()); SDcard.print(":");
+    SDcard.print(myGNSS.getMinute()); SDcard.print(":");
+    SDcard.print(myGNSS.getSecond()); SDcard.print(", ");
+    
+    long latitude = myGNSS.getLatitude();
+    SDCard.print(latitude); SDcard.print(", "); 
+
+    long longitude = myGNSS.getLongitude();
+    SDCard.print(longitude); SDcard.print(", "); 
+
+    byte SIV = myGNSS.getSIV();
+    SDCard.println(SIV); SDcard.println(", "); 
+  } else { SDCard.println("-, -, -, "); }
   
   if (bmp388.getMeasurements(temperature, pressure, altitude))  //bmp388 data
   { 
@@ -86,31 +105,17 @@ void loop() {                                                   //loop function,
     SDCard.println(gz); SDcard.print(", "); 
   } else { SDCard.print("-, -, -, ");
   
-  if (millis() - lastTime > 1000)                               //GPS Data (Lat, Long, SIV)
-  {
-    lastTime = millis();
-    
-    long latitude = myGNSS.getLatitude();
-    SDCard.print(latitude); SDcard.print(", "); 
-
-    long longitude = myGNSS.getLongitude();
-    SDCard.print(longitude); SDcard.print(", "); 
-
-    byte SIV = myGNSS.getSIV();
-    SDCard.println(SIV); SDcard.println(", "); 
-  } else { SDCard.println("-, -, -, "); }
-
   if(altitude > maxalt){ maxalt = altitude; }
 
 //determine state of vehicle ------------------------------------------------------------------------------------------------------------------------------------------------ NEEDS TESTING
 
-if(launchstate == 0 && (altitude+25) > startingalt) { launchstate = 1; }                                      //assending
-if(launchstate == 1 && altitude > altforstabilization) { launchstate = 2; }                                   //control active
-if(launchstate == 2 && !stabilization) {launchstate = 3; }                                                    //control deactive
-if(launchstate == 3 && stabilization) { launchstate = 2; }                                                    //control deactive
-if(launchstate == 2 && maxalt < (altitude+25)) { launchstate = 4; }                                           //desending
-if(launchstate == 3 && maxalt < (altitude+25)) { launchstate = 4; }                                           //desending
-if(launchstate == 4 && gy <= gyroscopestop && gx <= gyroscopestop && gz <= gyroscopestop) {launchstate = 5;}  //landed
+  if(launchstate == 0 && (altitude+25) > startingalt) { launchstate = 1; }                                      //assending
+  if(launchstate == 1 && altitude > altforstabilization) { launchstate = 2; }                                   //control active
+  if(launchstate == 2 && !stabilization) {launchstate = 3; }                                                    //control deactive
+  if(launchstate == 3 && stabilization) { launchstate = 2; }                                                    //control deactive
+  if(launchstate == 2 && maxalt < (altitude+25)) { launchstate = 4; }                                           //desending
+  if(launchstate == 3 && maxalt < (altitude+25)) { launchstate = 4; }                                           //desending
+  if(launchstate == 4 && gy <= gyroscopestop && gx <= gyroscopestop && gz <= gyroscopestop) {launchstate = 5;}  //landed
 
 //stabilization -------------------------------------------------------------------------------------------------------------------------------------------------------------  NEEDS TESTING
 
@@ -128,17 +133,64 @@ if(launchstate == 4 && gy <= gyroscopestop && gx <= gyroscopestop && gz <= gyros
 
 //camera -------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS WORK
 
-if(altitude <= 15000 && altitude >= (startingaltitude + 100) && launchstate == 1){ 
-  //take pictures
-} else if (altitude >= 15000 && launchstate == 1){
-  //start record / picture process
-} else if (altitude >= altForStabilization && launchstate != 1) {
-  //record video for stabilization and while falling
-}
+  unsigned long currentMillis = millis();
+
+  if(altitude <= 15000 && altitude >= (startingaltitude + 100) && launchstate == 1){      //pictures only this should take a picture everytime loop plays
+    if (currentMillis - previousMillis >= pictureOnTime) {
+      previousMillis = currentMillis;
+
+     if (pictureOn == LOW) {
+        pictureOn = HIGH;
+      } else {
+        pictureOn = LOW;
+      }
+    digitalWrite(camera, picutreOn);
+    
+  } else if (altitude >= 15000 && launchstate == 1){                                      //video and pictures - so far is just video (same thing as below)
+     if(videoWaitTime >= 1200) {
+        if (currentMillis - previousMillis >= videoOnTime) {
+        previousMillis = currentMillis;
+
+        if (videoOnUpdate == LOW) {
+            videoOnUpdate = HIGH;
+          } else {
+            videoOnUpdate = LOW;
+          }
+          digitalWrite(camera, videoOnUpdate);
+          if(videoOnMain) {
+            videoWaitTime = 1175;
+          } else { 
+            videoWaitTime = 0;
+          }
+          videoOnMain = !videoOnMain
+        }    
+     }
+     videoWaitTime += 1;
+  } else if (altitude >= altForStabilization && launchstate != 1) {                       //video only this should loop through taking a new video every 5 minutes
+      if(videoWaitTime >= 1200) {
+        if (currentMillis - previousMillis >= videoOnTime) {
+        previousMillis = currentMillis;
+
+        if (videoOnUpdate == LOW) {
+            videoOnUpdate = HIGH;
+          } else {
+            videoOnUpdate = LOW;
+          }
+          digitalWrite(camera, videoOnUpdate);
+          if(videoOnMain) {
+            videoWaitTime = 1175;
+          } else { 
+            videoWaitTime = 0;
+          }
+          videoOnMain = !videoOnMain
+        }    
+     }
+     videoWaitTime += 1;
+  }
 
 //extra ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
-  if(ledcounter == 4) {                                        //blink leds every 1/4 second, if ledcounter is increased, then time between blinks increases (ex. ledcounter = 8 then leds will blink every 2 seconds
+  if(ledcounter >= 4) {                                        //blink leds every 1/4 second, if ledcounter is increased, then time between blinks increases (ex. ledcounter = 8 then leds will blink every 2 seconds
     digitalWrite(LedPin, HIGH);
     ledcounter = 1;
   } else { 
@@ -148,5 +200,5 @@ if(altitude <= 15000 && altitude >= (startingaltitude + 100) && launchstate == 1
 
   packetcount += 1;
   flighttime += 0.25;                                         //add 0.25 sec to flight time
-  delay(250);                                                 //delay 0.25 sec
+  delay(250);                                                 //delay 0.25 sec (maybe change this to be a milli delay like the picture
 }
