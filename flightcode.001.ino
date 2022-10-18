@@ -12,29 +12,28 @@
 float temperature, pressure, altitude;            // Create the temperature, pressure and altitude variables
 BMP388_DEV bmp388;
 
-float flighttime, startingaltitude, maxalt; //sensor values, do not need to be assigned
+float startingaltitude, maxalt; //sensor values, do not need to be assigned
 SoftwareSerial SDCard(0, 1);
 SFE_UBLOX_GNSS myGNSS;
 
 int const ledPin = 3;                                            //New Energy Led Pin
 int const SolenoidClockwise = 4;                                 //pin for Solenoid Clockwise
 int const SolenoidCounterClockwise = 5;                          //pin for Solenoid Counter Clockwise
-int const camera = 6;                                            //pin for camera
+int const cameraPicture = 6;                                     //pin for camera picture
+int const cameraVideo = 7;                                       //pin for camera video
 float altForStabilization = 25000;                               //altitude that satbilization will start
 float gyroscopestop = 0.5f;                                      //gyroscope limiter to detect when it has stopped moving
 float maxDegSec = 30;                                            //target degrees/second of spin, enable solenoids when passed in the positive or negative direction
+float pictureTime = 10;
+float timeBetweenFires = 1;
 int ledcounter = 4;                                              //the amount of time between blinks (ledcounter/4) = the amount of blinks per second
-int pictureOnTime = 50;                                          //the delay between signals for picture taking
-int videoOnTime = 200;                                           //the delay between signals for starting and stopping video
-int videoWaitTime = 1200;                                        //the length of the video we want to record (videoWaitTime/240) = the amount of time in minutes that we are recording
 int packetcount;                                                 //amount of packets we've collected
 int launchstate;                                                 //what state the vehicle is in
 bool stabilize;                                                  //bool to enable stabilization
 bool stabilizealt;                                               //bool to signal if the altitude has been passed to start stabilizing
 bool ascending;                                                  //bool signaling if the vehicle is ascending or not
-bool pictureOn;                                                  //bool to take pictures
-bool videoOnUpdate;                                              //bool to take videos
-bool videoOnMain;                                                //determines if we are starting a new video or stopping a old one
+bool stoppedVideo;
+bool firstCameraStart;
 long lastTime = 0;                                               //long for ZOE (I don't actually know how this works, it was just in the example)
 
 void setup() {
@@ -48,11 +47,14 @@ void setup() {
   
   pinMode(SolenoidClockwise, OUTPUT);
   pinMode(SolenoidCounterClockwise, OUTPUT);
-  pinMode(camera, OUTPUT);
+  pinMode(cameraPicture, OUTPUT);
+  pinMode(cameraVideo, OUTPUT);
   pinMode(ledPin, OUTPUT);  
   stabilize = false;
   stabilizealt = false;
+  stoppedVideo = false;
   videoOnMain = false;
+  firstCameraStart = false;
   flighttime = 0; packetcount = 0; launchstate = 0;
   
   IMU.begin();                                                  //begin sensors
@@ -71,7 +73,7 @@ void setup() {
   myGNSS.setI2COutput(COM_TYPE_UBX);
   myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
   
-  Serial.println("TEAM_ID, MISSION_TIME, PACKET_COUNT, SW_STATE, CAM_STATE, REAL_TIME, LAT, LONG, SIV, PRESSURE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z");
+  Serial.println("TEAM_ID, PACKET_COUNT, SW_STATE, CAM_STATE, REAL_TIME, LAT, LONG, SIV, PRESSURE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z");
 }
 
 void loop() {                                                   //loop function, make sure last print statement is println, but no other print statements are
@@ -79,7 +81,6 @@ void loop() {                                                   //loop function,
 //recording and logging data -------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
   Serial.print("RCS Team 2 (HMMRHD), ");           //can combine if we want
-  Serial.print(flighttime + ", ");                 //record time into flight
   Serial.print(packetcount + ", ");
   Serial.print(launchstate + ", ");
   Serial.print("Camera state" + ", ");
@@ -159,70 +160,46 @@ void loop() {                                                   //loop function,
   if(altitude >= altForStabilization) {stabilizealt = true);                               //turn on at altitude
   else { stabilizealt = false; }
   
-  if(gy >= maxDegSec && stabilizealt) {                                                    //determine if we need to turn on Clockwise Solenoid
+  if(gy >= maxDegSec && stabilizealt && (timeBetweenFires/4) >= 1) {                       //determine if we need to turn on Clockwise Solenoid
     digitalWrite(SolenoidClockwise, HIGH);
+    timeBetweenFires = 0;
   } else { digitalWrite(SolenoidClockwise, LOW); }
  
-  if(gy <= -maxDegSec && stabilizealt) {                                                   //determine if we need to turn on Counter Clockwise Solenoid
+  if(gy <= -maxDegSec && stabilizealt && (timeBetweenFires/4) >= 1) {                      //determine if we need to turn on Counter Clockwise Solenoid
     digitalWrite(SolenoidCounterClockwise, HIGH);
+    timeBetweenFires = 0;
   } else { digitalWrite(SolenoidCounterClockwise, LOW); }
 
+  timeBetweenFires += 1;
 
-//camera -------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS WORK
+//camera -------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
-  unsigned long currentMillis = millis();
+  if(!firstCameraStart) {                                     //start video on startup
+    digitalWrite(cameraVideo, HIGH);
+    delay(150);
+    digitalWrite(cameraVideo, LOW);
+    firstCameraStart = true;
+  }
 
-  if(altitude <= 15000 && altitude >= (startingaltitude + 100) && launchstate == 1){      //pictures only this should take a picture everytime loop plays
-    if (currentMillis - previousMillis >= pictureOnTime) {
-      previousMillis = currentMillis;
-
-     if (pictureOn == LOW) {
-        pictureOn = HIGH;
-      } else {
-        pictureOn = LOW;
-      }
-    digitalWrite(camera, picutreOn);
-    
-  } else if (altitude >= 15000 && launchstate == 1){                                      //video and pictures - so far is just video (same thing as below)
-     if(videoWaitTime >= 1200) {
-        if (currentMillis - previousMillis >= videoOnTime) {
-        previousMillis = currentMillis;
-
-        if (videoOnUpdate == LOW) {
-            videoOnUpdate = HIGH;
-          } else {
-            videoOnUpdate = LOW;
-          }
-          digitalWrite(camera, videoOnUpdate);
-          if(videoOnMain) {
-            videoWaitTime = 1175;
-          } else { 
-            videoWaitTime = 0;
-          }
-          videoOnMain = !videoOnMain
-        }    
-     }
-     videoWaitTime += 1;
-  } else if (altitude >= altForStabilization && launchstate != 1) {                       //video only this should loop through taking a new video every 5 minutes
-      if(videoWaitTime >= 1200) {
-        if (currentMillis - previousMillis >= videoOnTime) {
-        previousMillis = currentMillis;
-
-        if (videoOnUpdate == LOW) {
-            videoOnUpdate = HIGH;
-          } else {
-            videoOnUpdate = LOW;
-          }
-          digitalWrite(camera, videoOnUpdate);
-          if(videoOnMain) {
-            videoWaitTime = 1175;
-          } else { 
-            videoWaitTime = 0;
-          }
-          videoOnMain = !videoOnMain
-        }    
-     }
-     videoWaitTime += 1;
+  if(launchState != 5) {                                      //take pictures anytime vehicle has not landed
+    if((pictureTIme) >= 40) { 
+      digitalWrite(cameraPicture, HIGH);
+      delay(50);
+      digitalWrite(cameraPicture, LOW);
+      pictureTIme = 0;
+    } else { 
+      pictureTime += 1;
+      delay(50);
+    }
+  } 
+  
+  if(launchState == 5) { 
+    if(!stoppedVideo) {
+      digitalWrite(cameraVideo, HIGH);
+      delay(550);
+      digitalWrite(cameraVideo, LOW);
+      stoppedVideo = true;
+    }
   }
 
 //extra ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
@@ -236,6 +213,5 @@ void loop() {                                                   //loop function,
   }
 
   packetcount += 1;
-  flighttime += 0.25;                                         //update to millis
-  delay(250);                                                 //delay 0.25 sec (maybe change this to be a milli delay like the picture
+  delay(200);                                                 //delay 0.20 sec - ends up being 0.25 with the picture delay
 }
