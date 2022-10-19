@@ -193,10 +193,10 @@ void loop() {                           //loop function, make sure last print st
   if(SW_STATE == "Control Deactive" && stabilize) { 
     SW_STATE = "Control Active";                                                                                            //control deactive
   }
-  if(SW_STATE == "Control Active" && maxalt < (ALTITUDE+25)) { 
+  if(SW_STATE == "Control Active" && maxalt > (ALTITUDE+50)) { 
     SW_STATE = "Desending";                                                                                            //desending
   }
-  if(SW_STATE == "Control Deactive" && maxalt < (ALTITUDE+25)) { 
+  if(SW_STATE == "Control Deactive" && maxalt > (ALTITUDE+50)) { 
     SW_STATE = "Desending";                                                                                            //desending
   }
   if(SW_STATE == "Desending" && gy <= gyroscopestop && gx <= gyroscopestop && gz <= gyroscopestop) {
