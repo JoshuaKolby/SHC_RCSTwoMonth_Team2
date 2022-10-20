@@ -39,10 +39,10 @@ long lastTime = 0;                                               //long for ZOE 
   
 
 //Variables that need to be output to the card
-String TEAM_ID = "RCS TEAM 2 (HMMRHD)"
+string TEAM_ID = "RCS TEAM 2 (HMMRHD)"
 int PACKET_COUNT = 1;
-String SW_STATE = "N/A";
-String CAM_STATE = "N/A";
+string SW_STATE = "N/A";
+string CAM_STATE = "N/A";
 int ALTITUDE = 0;
 int TEMP = 0;
 float ACC_X = 00.00;
