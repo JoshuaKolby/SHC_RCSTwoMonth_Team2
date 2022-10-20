@@ -133,9 +133,9 @@ void loop() {                           //loop function, make sure last print st
     ACC_Z = az;
   
   } else { 
-    ACC_X = "-";
-    ACC_Y = "-";
-    ACC_Z = "-";
+    ACC_X = 0;
+    ACC_Y = 0;
+    ACC_Z = 0;
    }
   
   float gx, gy, gz;
@@ -148,9 +148,9 @@ void loop() {                           //loop function, make sure last print st
     GYRO_Z = gz; 
    
   } else { 
-    GYRO_X = "-";
-    GYRO_Y = "-";
-    GYRO_Z = "-"; 
+    GYRO_X = 0;
+    GYRO_Y = 0;
+    GYRO_Z = 0; 
     }
   
   if(ALTITUDE > maxalt){ 
@@ -266,9 +266,9 @@ void atplls() {
     ALTITUDE = altitude;
 
   } else { 
-    TEMP = "-";
-    PRESSURE = "-";
-    ALTITUDE = "-";
+    TEMP = 0;
+    PRESSURE = 0;
+    ALTITUDE = 0;
    }
   
   if (myGNSS.checkUblox()){                               //GPS Data (Lat, Long, SIV)
@@ -278,9 +278,9 @@ void atplls() {
     SIV = myGNSS.getSIV();         //Has been tested and works, leaving call but removing print
 
   } else { 
-    latitude = "-";
-    longitude = "-";
-    SIV = "-";
+    latitude = 0;
+    longitude = 0;
+    SIV = 0;
    }
 
 
