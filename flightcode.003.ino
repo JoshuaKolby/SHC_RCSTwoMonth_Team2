@@ -204,7 +204,7 @@ void loop() {                           //loop function, make sure last print st
     firstCameraStart = true;
   }
 
-  if(SW_State != "Landed") {                                      //take pictures anytime vehicle has not landed
+  if(launchState != 4) {                                      //take pictures anytime vehicle has not landed
     if((pictureTime) >= 40) { 
       digitalWrite(cameraPicture, LOW);
       delay(50);
@@ -216,7 +216,7 @@ void loop() {                           //loop function, make sure last print st
     }
   } 
   
-  if(SW_STATE == "Landed") { 
+  if(launchState == 4) { 
     if(!stoppedVideo) {
       digitalWrite(cameraVideo, LOW);
       delay(550);
