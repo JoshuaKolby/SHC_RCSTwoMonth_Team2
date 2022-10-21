@@ -9,7 +9,7 @@
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <BMP388_DEV.h>                           // Include the BMP388_DEV.h library
 
-float temperature, pressure, altitude;            // Create the temperature, pressure and altitude variables
+float temperature, pressure, altitude_BMP;            // Create the temperature, pressure and altitude variables
 BMP388_DEV bmp388;
 float startingaltitude; 
 float maxalt;
@@ -107,8 +107,8 @@ void setup() {
   */
   
   SDCard.println("TEAM_ID, PACKET_COUNT, SW_STATE, CAM_STATE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z, REAL_TIME_H:REAL_TIME_M:REAL_TIME_S, PRESSURE, LAT, LONG, SIV");
-  //startingaltitude = bmp388.getMeasurements(altitude);
-digitalWrite(cameraPicture, HIGH);
+  //startingaltitude = bmp388.getMeasurements(altitude_BMP);
+  digitalWrite(cameraPicture, HIGH);
 }
 void loop() {                           //loop function, make sure last print statement is println, but no other print statements are
 
@@ -134,11 +134,7 @@ void loop() {                           //loop function, make sure last print st
     ACC_Y = ay;
     ACC_Z = az;
   
-  } else { 
-    ACC_X = 0;
-    ACC_Y = 0;
-    ACC_Z = 0;
-   }
+  } 
   
   float gx, gy, gz;
   if (IMU.gyroscopeAvailable()) {                               //IMU data gyro(in deg/sec)
@@ -149,25 +145,21 @@ void loop() {                           //loop function, make sure last print st
     GYRO_Y = gy;
     GYRO_Z = gz; 
    
-  } else { 
-    GYRO_X = 0;
-    GYRO_Y = 0;
-    GYRO_Z = 0; 
-    }
+  } 
   
-  if(altitude > maxalt){ 
-    maxalt = altitude; 
+  if(altitude_BMP > maxalt){ 
+    maxalt = altitude_BMP; 
     }
 
 //determine state of vehicle ------------------------------------------------------------------------------------------------------------------------------------------------ NEEDS TESTING
   
-  if(launchState == 0 && ((altitude+30) > startingaltitude)) { 
+  if(launchState == 0 && ((altitude_BMP+30) > startingaltitude)) { 
     launchState = 1;                                                                                            //ascending
   }
-  if(launchState == 1 && (altitude > altForStabilization)) { 
+  if(launchState == 1 && (altitude_BMP > altForStabilization)) { 
     launchState = 2;                                                                                            //control active
   }
-  if(launchState == 2 && (maxalt < (altitude+50))) { 
+  if(launchState == 2 && (maxalt < (altitude_BMP+50))) { 
     launchState = 3;                                                                                            //desending
   }
   if(launchState == 3 && (gy <= gyroscopestop) && (gx <= gyroscopestop) && (gz <= gyroscopestop)) {
@@ -178,7 +170,7 @@ void loop() {                           //loop function, make sure last print st
   
 //stabilization -------------------------------------------------------------------------------------------------------------------------------------------------------------  NEEDS TESTING *change to ||
 /*
-  if(altitude >= altForStabilization) {stabilizealt = true;}                               //turn on at altitude
+  if(altitude_BMP >= altForStabilization) {stabilizealt = true;}                               //turn on at altitude
   else { stabilizealt = false;}
   
   if(gz >= maxDegSec && stabilizealt && (timeBetweenFires/2) >= 1) {                       //determine if we need to turn on Clockwise Solenoid
@@ -229,23 +221,19 @@ if(millis() - LED_TIME >= 250) {
 
 //Function to Send Packets 
 void send_Packet() {
-  SDCard.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(altitude) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV));
+  SDCard.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(altitude_BMP) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV));
     packetcount += 1;
 }
 
 //Function to Pull Data Measurements from bmp388
 void atplls() {
-  if (bmp388.getMeasurements(temperature, pressure, altitude))    // Check if the measurement is complete
+  if (bmp388.getMeasurements(temperature, pressure, altitude_BMP))    // Check if the measurement is complete
   {
     TEMP = temperature;
     PRESSURE = pressure;
-    altitude = altitude;
+    altitude_BMP = altitude_BMP;
 
-  } else { 
-    TEMP = 0;
-    PRESSURE = 0;
-    altitude = 0;
-   }
+  } 
   
   /*
   if (myGNSS.checkUblox()){                               //GPS Data (Lat, Long, SIV)
@@ -254,11 +242,7 @@ void atplls() {
     longitude = myGNSS.getLongitude();       //Has been tested and works, leaving call but removing print
     SIV = myGNSS.getSIV();         //Has been tested and works, leaving call but removing print
 
-  } else { 
-    latitude = 0;
-    longitude = 0;
-    SIV = 0;
-   }
+  } 
 */
 
 }
