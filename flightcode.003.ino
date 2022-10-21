@@ -214,10 +214,9 @@ if(launchState != 4) {
 
 //extra ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
-  if(ledcounter >= 4) {                                        //blink leds every 1/4 second, if ledcounter is increased, then time between blinks increases (ex. ledcounter = 8 then leds will blink every 2 seconds
+ if(ledcounter >= 8) {                                        //blink leds every 1/4 second, if ledcounter is increased, then time between blinks increases (ex. ledcounter = 8 then leds will blink every 2 seconds
     digitalWrite(ledPin, HIGH);
     ledcounter = 1;
-    
   } else { 
     digitalWrite (ledPin, LOW);
     ledcounter += 1;
