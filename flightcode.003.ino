@@ -197,32 +197,18 @@ void loop() {                           //loop function, make sure last print st
 //camera -------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
 
-  if(!firstCameraStart) {                                     //start video on startup
-    digitalWrite(cameraVideo, LOW);
-    delay(150);
-    digitalWrite(cameraVideo, HIGH);
-    firstCameraStart = true;
-  }
+if(launchState != 4) {  
 
-  if(launchState != 4) {                                      //take pictures anytime vehicle has not landed
-    if((pictureTime) >= 40) { 
-      digitalWrite(cameraPicture, LOW);
-      delay(50);
-      digitalWrite(cameraPicture, HIGH);
-      pictureTime = 0;
-    } else { 
-      pictureTime += 1;
-      delay(50);
-    }
-  } 
+  }
   
-  if(launchState == 4) { 
-    if(!stoppedVideo) {
-      digitalWrite(cameraVideo, LOW);
-      delay(550);
-      digitalWrite(cameraVideo, HIGH);
-      stoppedVideo = true;
-    }
+    digitalWrite(cameraPicture, HIGH);
+    delay(5000);
+    digitalWrite(cameraPicture, LOW);
+    delay(2000);
+  
+  int currentTime = int(millis());
+  if (currentTime - pictureTime >= 2000){ 
+    pictureTime = int(millis());
   }
 
 
