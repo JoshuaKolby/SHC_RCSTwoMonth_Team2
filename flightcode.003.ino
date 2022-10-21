@@ -44,7 +44,7 @@ byte SIV;
   
 
 //Variables that need to be output to the card
-String TEAM_ID = "RCS TEAM 2 (HMMRHD)"
+String TEAM_ID = "RCS TEAM 2 (HMMRHD)";
 float last_sec = millis();
 float REAL_TIME_S_2 = 00.00;
 float REAL_TIME_M_2 = 00.00;
