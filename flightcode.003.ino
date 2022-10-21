@@ -38,6 +38,7 @@ bool firstCameraStart;
 long lastTime = 0;                                               //long for ZOE (I don't actually know how this works, it was just in the example)
 long latitude;
 long longitude;
+bool videoOnMain;
 byte SIV;
 
   
