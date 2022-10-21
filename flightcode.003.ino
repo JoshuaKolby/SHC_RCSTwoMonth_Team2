@@ -66,7 +66,7 @@ float PRESSURE = 00.00;
 float LAT = 00.00;
 float LONG = 00.00;
 int packtime = 0;
-
+float LED_TIME = millis();
 
 
 
@@ -206,7 +206,8 @@ void loop() {                           //loop function, make sure last print st
  }
 
 //extra ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
-
+if(millis() - LED_TIME >= 2000) {
+  LED_TIME = millis();
  if(ledcounter >= 8) {                                        //blink leds every 1/4 second, if ledcounter is increased, then time between blinks increases (ex. ledcounter = 8 then leds will blink every 2 seconds
     digitalWrite(ledPin, HIGH);
     ledcounter = 1;
@@ -222,7 +223,7 @@ void loop() {                           //loop function, make sure last print st
   }
                                        
 }
-
+}
 
 //Function to Send Packets 
 void send_Packet() {
