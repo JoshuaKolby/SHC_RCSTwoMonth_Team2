@@ -64,7 +64,6 @@ float REAL_TIME_H = 00.00;
 float PRESSURE = 00.00;
 float LAT = 00.00;
 float LONG = 00.00;
-float SIV = 00.00; 
 int packtime = 0;
 
 
