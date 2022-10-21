@@ -49,8 +49,8 @@ float REAL_TIME_S_2 = 00.00;
 float REAL_TIME_M_2 = 00.00;
 float REAL_TIME_H_2 = 00.00;
 int PACKET_COUNT = 1;
-String SW_STATE = "N/A";
-String CAM_STATE = "N/A";
+const char* SW_STATE = "N/A";
+const char* CAM_STATE = "N/A";
 int TEMP = 0;
 float ACC_X = 00.00;
 float ACC_Y = 00.00;
@@ -91,7 +91,6 @@ void setup() {
   stoppedVideo = false;
   videoOnMain = false;
   firstCameraStart = false;
-  flighttime = 0; 
   packetcount = 0; 
   packtime = millis();
   
@@ -179,8 +178,8 @@ void loop() {                           //loop function, make sure last print st
   
 //stabilization -------------------------------------------------------------------------------------------------------------------------------------------------------------  NEEDS TESTING *change to ||
 
-  if(altitude >= altForStabilization) {stabilizealt = true);                               //turn on at altitude
-  else { stabilizealt = false; }
+  if(altitude >= altForStabilization) {stabilizealt = true;}                               //turn on at altitude
+  else { stabilizealt = false;}
   
   if(gy >= maxDegSec && stabilizealt && (timeBetweenFires/4) >= 1) {                       //determine if we need to turn on Clockwise Solenoid
     digitalWrite(SolenoidClockwise, HIGH);
