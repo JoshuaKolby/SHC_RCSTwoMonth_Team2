@@ -42,6 +42,10 @@ byte SIV;
 
 //Variables that need to be output to the card
 String TEAM_ID = "RCS TEAM 2 (HMMRHD)"
+float last_sec = millis();
+float REAL_TIME_S_2 = 00.00;
+float REAL_TIME_M_2 = 00.00;
+float REAL_TIME_H_2 = 00.00;
 int PACKET_COUNT = 1;
 String SW_STATE = "N/A";
 String CAM_STATE = "N/A";
@@ -111,7 +115,7 @@ void setup() {
 void loop() {                           //loop function, make sure last print statement is println, but no other print statements are
 
 //recording and logging data -------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
-
+  
   REAL_TIME_S = myGNSS.getSecond();
   REAL_TIME_M = myGNSS.getMinute();
   REAL_TIME_H = myGNSS.getHour();
@@ -203,17 +207,17 @@ void loop() {                           //loop function, make sure last print st
 
 
   if(!firstCameraStart) {                                     //start video on startup
-    digitalWrite(cameraVideo, HIGH);
-    delay(150);
     digitalWrite(cameraVideo, LOW);
+    delay(150);
+    digitalWrite(cameraVideo, HIGH);
     firstCameraStart = true;
   }
 
   if(SW_State != "Landed") {                                      //take pictures anytime vehicle has not landed
     if((pictureTime) >= 40) { 
-      digitalWrite(cameraPicture, HIGH);
-      delay(50);
       digitalWrite(cameraPicture, LOW);
+      delay(50);
+      digitalWrite(cameraPicture, HIGH);
       pictureTime = 0;
     } else { 
       pictureTime += 1;
@@ -223,9 +227,9 @@ void loop() {                           //loop function, make sure last print st
   
   if(SW_STATE == "Landed") { 
     if(!stoppedVideo) {
-      digitalWrite(cameraVideo, HIGH);
-      delay(550);
       digitalWrite(cameraVideo, LOW);
+      delay(550);
+      digitalWrite(cameraVideo, HIGH);
       stoppedVideo = true;
     }
   }
@@ -253,7 +257,7 @@ void loop() {                           //loop function, make sure last print st
 
 //Function to Send Packets 
 void send_Packet() {
-  Serial.println(TEAM_ID + ", " + PACKET_COUNT + ", " + SW_STATE + ", " + CAM_STATE + ", " + ALTITUDE + ", " + TEMP + ", " + ACC_X + ", " + ACC_Y + ", " + ACC_Z + ", " + GYRO_X + ", " + GYRO_Y + ", " + GYRO_Z + ", " + REAL_TIME_H + ":" + REAL_TIME_M + ":" + REAL_TIME_S + ", " + PRESSURE + ", " + LAT + ", " + LONG + ", " + SIV);
+  Serial.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(ALTITUDE) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV);
     packetcount += 1;
 }
 
