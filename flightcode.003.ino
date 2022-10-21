@@ -114,11 +114,11 @@ void setup() {
 void loop() {                           //loop function, make sure last print statement is println, but no other print statements are
 
 //recording and logging data -------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
-  
+  /*
   REAL_TIME_S = myGNSS.getSecond();
   REAL_TIME_M = myGNSS.getMinute();
   REAL_TIME_H = myGNSS.getHour();
-
+*/
   if (millis() - lastTime >= 200)                               //GPS Data
   {                                                             //Checks the altitude, temperature, pressure, latitude, longitude, and SIV
     lastTime = millis();
