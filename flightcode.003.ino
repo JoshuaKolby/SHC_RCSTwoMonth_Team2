@@ -155,8 +155,8 @@ void loop() {                           //loop function, make sure last print st
     GYRO_Z = 0; 
     }
   
-  if(ALTITUDE > maxalt){ 
-    maxalt = ALTITUDE; 
+  if(altitude > maxalt){ 
+    maxalt = altitude; 
     }
 
 //determine state of vehicle ------------------------------------------------------------------------------------------------------------------------------------------------ NEEDS TESTING
