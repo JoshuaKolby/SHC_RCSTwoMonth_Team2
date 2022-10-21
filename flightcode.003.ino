@@ -77,8 +77,8 @@ void setup() {
   SDCard.begin(115200);                                          //IF TESTING ON COMPUTER CHANGE ALL Serial.PRINT TO SERIAL.PRINT AND COMMENT OUT PARTS YOU DON'T NEED AT THE MOMENT
   Wire.begin(); 
   IMU.begin();
-  myGNSS.setI2COutput(COM_TYPE_UBX);
-  myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
+  //myGNSS.setI2COutput(COM_TYPE_UBX);
+  //myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
   bmp388.begin();                                 // Default initialisation, place the BMP388 into SLEEP_MODE 
   bmp388.setTimeStandby(TIME_STANDBY_1280MS);     // Set the standby time to 1.3 seconds
   bmp388.startNormalConversion();   
@@ -90,7 +90,7 @@ void setup() {
   pinMode(ledPin, OUTPUT);  
   stabilizealt = false;
   stoppedVideo = false;
-  videoOnMain = false;
+  //videoOnMain = false;
   firstCameraStart = false;
   packetcount = 0; 
   packtime = millis();
@@ -178,13 +178,13 @@ void loop() {                           //loop function, make sure last print st
   
   
 //stabilization -------------------------------------------------------------------------------------------------------------------------------------------------------------  NEEDS TESTING *change to ||
-
+/*
   if(altitude >= altForStabilization) {stabilizealt = true;}                               //turn on at altitude
   else { stabilizealt = false;}
   
   if(gy >= maxDegSec && stabilizealt && (timeBetweenFires/4) >= 1) {                       //determine if we need to turn on Clockwise Solenoid
     digitalWrite(SolenoidClockwise, HIGH);
-    timeBetweenFires = 0;                                                   ////****NEED TO SET UP ALTITUDE RANGES****////
+    timeBetweenFires = 0;                                                  
   } else { digitalWrite(SolenoidClockwise, LOW); }
  
   if(gy <= -maxDegSec && stabilizealt && (timeBetweenFires/4) >= 1) {                      //determine if we need to turn on Counter Clockwise Solenoid
@@ -193,24 +193,17 @@ void loop() {                           //loop function, make sure last print st
   } else { digitalWrite(SolenoidCounterClockwise, LOW); }
 
   timeBetweenFires += 1;
-
+*/
 //camera -------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
-
-if(launchState != 4) {  
-
-  }
-  
-    digitalWrite(cameraPicture, HIGH);
-    delay(5000);
+ if(launchState != 4) {   
+  if (millis() - pictureTime >= 2000){  
     digitalWrite(cameraPicture, LOW);
-    delay(2000);
-  
-  int currentTime = int(millis());
-  if (currentTime - pictureTime >= 2000){ 
-    pictureTime = int(millis());
+    delay(50);
+    digitalWrite(cameraPicture, HIGH);
+    pictureTime = millis();
   }
-
+ }
 
 //extra ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
@@ -251,6 +244,7 @@ void atplls() {
     altitude = 0;
    }
   
+  /*
   if (myGNSS.checkUblox()){                               //GPS Data (Lat, Long, SIV)
     
     latitude = myGNSS.getLatitude();       //Has been tested and works, leaving call but removing print
@@ -262,7 +256,7 @@ void atplls() {
     longitude = 0;
     SIV = 0;
    }
-
+*/
 
 }
 
