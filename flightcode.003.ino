@@ -107,7 +107,6 @@ void setup() {
   */
   
   SDCard.println("TEAM_ID, PACKET_COUNT, SW_STATE, CAM_STATE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z, REAL_TIME_H:REAL_TIME_M:REAL_TIME_S, PRESSURE, LAT, LONG, SIV");
-  //startingaltitude = bmp388.getMeasurements(altitude_BMP);
   digitalWrite(cameraPicture, HIGH);
 }
 void loop() {                           //loop function, make sure last print statement is println, but no other print statements are
@@ -124,7 +123,9 @@ void loop() {                           //loop function, make sure last print st
     atplls();
 
    }
-
+  if(millis() < 500) {    
+      startingaltitude = altitude_BMP;
+    }
   
   float ax, ay, az;
   if (IMU.accelerationAvailable()) {                            //IMU data acceleration
