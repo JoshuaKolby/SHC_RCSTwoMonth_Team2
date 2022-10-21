@@ -262,7 +262,7 @@ void atplls() {
   } else { 
     TEMP = 0;
     PRESSURE = 0;
-    ALTITUDE = 0;
+    altitude = 0;
    }
   
   if (myGNSS.checkUblox()){                               //GPS Data (Lat, Long, SIV)
