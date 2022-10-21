@@ -11,8 +11,10 @@
 
 float temperature, pressure, altitude;            // Create the temperature, pressure and altitude variables
 BMP388_DEV bmp388;
-
-float startingaltitude, maxalt; //sensor values, do not need to be assigned
+float startingaltitude; 
+float maxalt;
+float seconds;
+                                     //sensor values, do not need to be assigned
 SoftwareSerial SDCard(0, 1);
 SFE_UBLOX_GNSS myGNSS;
 
