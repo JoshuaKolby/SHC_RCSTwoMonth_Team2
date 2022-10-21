@@ -206,7 +206,7 @@ void loop() {                           //loop function, make sure last print st
  }
 
 //extra ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
-if(millis() - LED_TIME >= 200) {
+if(millis() - LED_TIME >= 250) {
   
  if(ledcounter >= 8) {                                        //blink leds every 1/4 second, if ledcounter is increased, then time between blinks increases (ex. ledcounter = 8 then leds will blink every 2 seconds
     digitalWrite(ledPin, HIGH);
