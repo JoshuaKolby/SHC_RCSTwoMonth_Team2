@@ -18,18 +18,19 @@ float seconds;
 SoftwareSerial SDCard(0, 1);
 SFE_UBLOX_GNSS myGNSS;
 
-int const ledPin = 3;                                            //New Energy Led Pin
-int const SolenoidClockwise = 4;                                 //pin for Solenoid Clockwise
+int const ledPin = 8;                                            //New Energy Led Pin
+int const SolenoidClockwise = 10;                                 //pin for Solenoid Clockwise
 int const SolenoidCounterClockwise = 5;                          //pin for Solenoid Counter Clockwise
-int const cameraPicture = 6;                                     //pin for camera picture
-int const cameraVideo = 7;                                       //pin for camera video
+int const cameraPicture = 14;                                     //pin for camera picture
+int const cameraVideo = 12;                                       //pin for camera video
 float altForStabilization = 25000;                               //altitude that satbilization will start
 float gyroscopestop = 0.5f;                                      //gyroscope limiter to detect when it has stopped moving
 float maxDegSec = 30;                                            //target degrees/second of spin, enable solenoids when passed in the positive or negative direction
-float pictureTime = 10;
+long pictureTime = 0;
 float timeBetweenFires = 1;
 int ledcounter = 4;                                              //the amount of time between blinks (ledcounter/4) = the amount of blinks per second
 int packetcount;                                                 //amount of packets we've collected
+int launchState;                                                 //what state the vehicle is in
 bool stabilize;                                                  //bool to enable stabilization
 bool stabilizealt;                                               //bool to signal if the altitude has been passed to start stabilizing
 bool ascending;                                                  //bool signaling if the vehicle is ascending or not
@@ -49,9 +50,8 @@ float REAL_TIME_S_2 = 00.00;
 float REAL_TIME_M_2 = 00.00;
 float REAL_TIME_H_2 = 00.00;
 int PACKET_COUNT = 1;
-String SW_STATE = "N/A";
-String CAM_STATE = "N/A";
-int ALTITUDE = 0;
+char SW_STATE = "N/A";
+char CAM_STATE = "N/A";
 int TEMP = 0;
 float ACC_X = 00.00;
 float ACC_Y = 00.00;
@@ -77,6 +77,9 @@ void setup() {
   Serial.begin(115200);                                          //baud rate is 115200, if something doesn't work, check baud first
   SDCard.begin(115200);                                          //IF TESTING ON COMPUTER CHANGE ALL Serial.PRINT TO SERIAL.PRINT AND COMMENT OUT PARTS YOU DON'T NEED AT THE MOMENT
   Wire.begin(); 
+  IMU.begin();
+  myGNSS.setI2COutput(COM_TYPE_UBX);
+  myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
   bmp388.begin();                                 // Default initialisation, place the BMP388 into SLEEP_MODE 
   bmp388.setTimeStandby(TIME_STANDBY_1280MS);     // Set the standby time to 1.3 seconds
   bmp388.startNormalConversion();   
@@ -95,25 +98,22 @@ void setup() {
   packetcount = 0; 
   packtime = millis();
   
-  IMU.begin();                                                  //begin sensors
-  //startingaltitude = bmp388.getMeasurements(altitude);
-  if (myGNSS.begin() == false) { //Connect to the u-blox module using Wire port
-    Serial.println(F("GPS did not work you idiot. Freezing."));
+                                                 //begin sensors
+   /*
+  while (!myGNSS.begin() || !IMU.begin() || !bmp388.begin()) {                                  //Connect to the u-blox module using Wire port
+    SDCard.println(F("sensors did not work you idiot. Get the god damn wiring right once in a while. Freezing."));
     digitalWrite(ledPin, HIGH);
+    delay(50);
+    digitalWrite(ledPin, LOW);
+    delay(50);
     while (1);
   }
-  while(!IMU.begin()){
-    Serial.println("sensor initiation failed");
-    digitalWrite(ledPin, HIGH);
-    while (1);
-  }  
+  */
   
-  myGNSS.setI2COutput(COM_TYPE_UBX);
-  myGNSS.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
-  
-  Serial.println("TEAM_ID, PACKET_COUNT, SW_STATE, CAM_STATE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z, REAL_TIME_H:REAL_TIME_M:REAL_TIME_S, PRESSURE, LAT, LONG, SIV");}
+  Serial.println("TEAM_ID, PACKET_COUNT, SW_STATE, CAM_STATE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z, REAL_TIME_H:REAL_TIME_M:REAL_TIME_S, PRESSURE, LAT, LONG, SIV");
+  //startingaltitude = bmp388.getMeasurements(altitude);
 
-
+}
 void loop() {                           //loop function, make sure last print statement is println, but no other print statements are
 
 //recording and logging data -------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
@@ -164,33 +164,25 @@ void loop() {                           //loop function, make sure last print st
     }
 
 //determine state of vehicle ------------------------------------------------------------------------------------------------------------------------------------------------ NEEDS TESTING
-
-///////////////*****************CHECK TO SEE IF WORKS AS INTENDED
-  if(SW_STATE == "N/A" && (ALTITUDE+25) > startingalt) { 
-    SW_STATE = "Ascending";                                                                                            //ascending
+  
+  if(launchState == 0 && ((altitude+30) > startingaltitude)) { 
+    launchState = 1;                                                                                            //ascending
   }
-  if(SW_STATE == "Ascending" && ALTITUDE > altforstabilization) { 
-    SW_STATE = "Control Active";                                                                                            //control active
+  if(launchState == 1 && (altitude > altForStabilization)) { 
+    launchState = 2;                                                                                            //control active
   }
-  if(SW_STATE == "Control Active" && !stabilize) { 
-    SW_STATE = "Control Deactive";                                                                                            //control deactive
+  if(launchState == 2 && (maxalt < (altitude+50))) { 
+    launchState = 3;                                                                                            //desending
   }
-  if(SW_STATE == "Control Deactive" && stabilize) { 
-    SW_STATE = "Control Active";                                                                                            //control deactive
-  }
-  if(SW_STATE == "Control Active" && maxalt > (ALTITUDE+50)) { 
-    SW_STATE = "Desending";                                                                                            //desending
-  }
-  if(SW_STATE == "Control Deactive" && maxalt > (ALTITUDE+50)) { 
-    SW_STATE = "Desending";                                                                                            //desending
-  }
-  if(SW_STATE == "Desending" && gy <= gyroscopestop && gx <= gyroscopestop && gz <= gyroscopestop) {
-    SW_STATE = "Landed";                                                                                            //landed
+  if(launchState == 3 && (gy <= gyroscopestop) && (gx <= gyroscopestop) && (gz <= gyroscopestop)) {
+    launchState = 4;                                                                                            //landed
   }
 
+  
+  
 //stabilization -------------------------------------------------------------------------------------------------------------------------------------------------------------  NEEDS TESTING *change to ||
 
-  if(ALTITUDE >= altForStabilization) {stabilizealt = true);                               //turn on at altitude
+  if(altitude >= altForStabilization) {stabilizealt = true);                               //turn on at altitude
   else { stabilizealt = false; }
   
   if(gy >= maxDegSec && stabilizealt && (timeBetweenFires/4) >= 1) {                       //determine if we need to turn on Clockwise Solenoid
@@ -259,7 +251,7 @@ void loop() {                           //loop function, make sure last print st
 
 //Function to Send Packets 
 void send_Packet() {
-  Serial.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(ALTITUDE) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV);
+  Serial.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(altitude) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV);
     packetcount += 1;
 }
 
@@ -269,7 +261,7 @@ void atplls() {
   {
     TEMP = temperature;
     PRESSURE = pressure;
-    ALTITUDE = altitude;
+    altitude = altitude;
 
   } else { 
     TEMP = 0;
