@@ -283,6 +283,59 @@ void atplls() {
 
 
 
+03:47: error: expected ',' or ';' before 'float'
+ float last_sec = millis();
+ ^
+03:59: error: redefinition of 'float GYRO_X'
+ float GYRO_X = 00.00;
+       ^
+C:\Users\joshu\OneDrive\OneDrive\Documents\Arduino\03\03.ino:58:7: note: 'float GYRO_X' previously defined here
+ float GYRO_X = 00.00;
+       ^
+03:60: error: redefinition of 'float GYRO_X'
+ float GYRO_X = 00.00;
+       ^
+C:\Users\joshu\OneDrive\OneDrive\Documents\Arduino\03\03.ino:58:7: note: 'float GYRO_X' previously defined here
+ float GYRO_X = 00.00;
+       ^
+03: In function 'void setup()':
+03:92: error: 'videoOnMain' was not declared in this scope
+   videoOnMain = false;
+   ^
+03: In function 'void loop()':
+03:149: error: 'GYRO_Y' was not declared in this scope
+     GYRO_Y = gy;
+     ^
+03:150: error: 'GYRO_Z' was not declared in this scope
+     GYRO_Z = gz; 
+     ^
+03:154: error: 'GYRO_Y' was not declared in this scope
+     GYRO_Y = 0;
+     ^
+03:155: error: 'GYRO_Z' was not declared in this scope
+     GYRO_Z = 0; 
+     ^
+03:158: error: 'ALTITUDE' was not declared in this scope
+   if(ALTITUDE > maxalt){ 
+      ^
+03:206: error: 'SW_State' was not declared in this scope
+   if(SW_State != "Landed") {                                      //take pictures anytime vehicle has not landed
+      ^
+03:218: warning: comparison with string literal results in unspecified behaviour 
+   if(SW_STATE == "Landed") { 
+                  ^
+03: In function 'void send_Packet()':
+03:250: error: 'GYRO_Y' was not declared in this scope
+   SDCard.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(altitude) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV);
+                                                                                                                                                                                                                                                                                                           ^
+03:250: error: 'GYRO_Z' was not declared in this scope
+   SDCard.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(altitude) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV);
+                                                                                                                                                                                                                                                                                                                                   ^
+03: In function 'void atplls()':
+03:265: error: 'ALTITUDE' was not declared in this scope
+     ALTITUDE = 0;
+     ^
+expected ',' or ';' before 'float'
 
 
 
