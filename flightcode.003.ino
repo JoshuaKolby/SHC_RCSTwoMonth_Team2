@@ -248,7 +248,7 @@ void loop() {                           //loop function, make sure last print st
 
 //Function to Send Packets 
 void send_Packet() {
-  SDCard.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(altitude) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV);
+  SDCard.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(altitude) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV));
     packetcount += 1;
 }
 
