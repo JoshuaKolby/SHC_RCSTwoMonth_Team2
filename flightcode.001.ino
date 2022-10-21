@@ -1,6 +1,6 @@
 /*RCS Team 2 Program
  * IF YOU ARE TESTING BE SURE TO COMMENT OUT PARTS OF CODE YOU ARE NOT USING
- * IF USING THE SDCard MONITOR TO READ DATA, CHANGE ALL SDCard.PRINT TO SDCard.PRINT OTHERWISE YOU WILL NOT SEE ANYTHING
+ * IF USING THE Serial MONITOR TO READ DATA, CHANGE ALL Serial.PRINT TO Serial.PRINT OTHERWISE YOU WILL NOT SEE ANYTHING
  */
 
 #include <SoftwareSerial.h>
@@ -9,11 +9,10 @@
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <BMP388_DEV.h>   
 
-float temperature, pressure, altitude;            // Create the temperature, pressure and altitude variables
+float temperature, pressure, altitude_BMP;            // Create the temperature, pressure and altitude variables
 BMP388_DEV bmp388;    
 float startingaltitude; 
 float maxalt;
-float seconds;
 
 SoftwareSerial SDCard(0, 1);
 SFE_UBLOX_GNSS myGNSS;
@@ -40,7 +39,7 @@ long pictureTime = 0;
 void setup() {
   
   Serial.begin(115200);                                          //baud rate is 115200, if something doesn't work, check baud first
-  SDCard.begin(115200);                                          //IF TESTING ON COMPUTER CHANGE ALL SDCard.PRINT TO SDCard.PRINT AND COMMENT OUT PARTS YOU DON'T NEED AT THE MOMENT
+  SDCard.begin(115200);                                          //IF TESTING ON COMPUTER CHANGE ALL Serial.PRINT TO .PRINT AND COMMENT OUT PARTS YOU DON'T NEED AT THE MOMENT
   Wire.begin(); 
   IMU.begin();
   //myGNSS.setI2COutput(COM_TYPE_UBX);
@@ -59,18 +58,16 @@ void setup() {
   //videoOnMain = false;
   firstCameraStart = false;
   packetcount = 0; launchState = 0; pictureTime = millis();
-  /*
-  while (!myGNSS.begin() || !IMU.begin() || !bmp388.begin()) {                                  //Connect to the u-blox module using Wire port
+  /*while (!myGNSS.begin() || !IMU.begin() || !bmp388.begin()) {                                  //Connect to the u-blox module using Wire port
     SDCard.println(F("sensors did not work you idiot. Get the god damn wiring right once in a while. Freezing."));
     digitalWrite(ledPin, HIGH);
     delay(50);
     digitalWrite(ledPin, LOW);
     delay(50);
     while (1);
-  }
-  */
+  }*/
   SDCard.println("TEAM_ID, PACKET_COUNT, MISSION_TIME, SW_STATE, CAM_STATE, REAL_TIME, LAT, LONG, SIV, PRESSURE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z");
-  //startingaltitude = bmp388.getAltitude();
+  digitalWrite(cameraPicture, HIGH);
 }
 
 void loop() {                                                   //loop function, make sure last print statement is println, but no other print statements are
@@ -79,15 +76,19 @@ void loop() {                                                   //loop function,
 
   SDCard.print("RCS Team 2 (HMMRHD), ");           //can combine if we want
   SDCard.print(packetcount); SDCard.print(", ");
-  SDCard.print(seconds); SDCard.print(", ");
+  SDCard.print(millis()); SDCard.print(", ");
   SDCard.print(launchState); SDCard.print(", ");
   SDCard.print("Camera state"); SDCard.print(", ");
 
-  if (bmp388.getMeasurements(temperature, pressure, altitude))    // Check if the measurement is complete
+  if (bmp388.getMeasurements(temperature, pressure, altitude_BMP))    // Check if the measurement is complete
   {
     SDCard.print(temperature); SDCard.print(", ");                    // Display the results    
     SDCard.print(pressure); SDCard.print(", ");    
-    SDCard.print(altitude); SDCard.print(", "); 
+    SDCard.print(altitude_BMP); SDCard.print(", "); 
+    
+    if(millis() < 500) {    
+      startingaltitude = altitude_BMP;
+    }
   } else { SDCard.print(", , , "); }
   
   float ax, ay, az;
@@ -115,7 +116,7 @@ void loop() {                                                   //loop function,
 
     byte SIV = myGNSS.getSIV();
     SDCard.print(SIV); SDCard.print(", ");*/
-  } //else { SDCard.print(", , , "); }
+  } else { SDCard.print(", , , "); }
   
   float gx, gy, gz;
   if (IMU.gyroscopeAvailable()) {                               //IMU data gyro(in deg/sec)
@@ -127,17 +128,17 @@ void loop() {                                                   //loop function,
     SDCard.print(gz); SDCard.println(", ");
   } else { SDCard.println(", , , "); }
   
-  if(altitude > maxalt){ maxalt = altitude; }
+  if(altitude_BMP > maxalt){ maxalt = altitude_BMP; }
 
 //determine state of vehicle ------------------------------------------------------------------------------------------------------------------------------------------------ NEEDS TESTING
 
-  if(launchState == 0 && ((altitude+25) > startingaltitude)) { 
+  if(launchState == 0 && ((altitude_BMP+25) > startingaltitude)) { 
     launchState = 1;                                                                                            //ascending
   }
-  if(launchState == 1 && (altitude > altForStabilization)) { 
+  if(launchState == 1 && (altitude_BMP > altForStabilization)) { 
     launchState = 2;                                                                                            //control active
   }
-  if(launchState == 2 && (maxalt < (altitude+50))) { 
+  if(launchState == 2 && (maxalt < (altitude_BMP+50))) { 
     launchState = 3;                                                                                            //desending
   }
   if(launchState == 3 && (gy <= gyroscopestop) && (gx <= gyroscopestop) && (gz <= gyroscopestop)) {
@@ -146,7 +147,7 @@ void loop() {                                                   //loop function,
 
 //stabilization -------------------------------------------------------------------------------------------------------------------------------------------------------------  NEEDS TESTING *change to ||
 /*
-  if(altitude >= altForStabilization) {stabilizealt = true);                               //turn on at altitude
+  if(altitude_BMP >= altForStabilization) {stabilizealt = true);                               //turn on at altitude
   else { stabilizealt = false; }
   
   if(gy >= maxDegSec && stabilizealt && ((timeBetweenFires/4) >= 1)) {                       //determine if we need to turn on Clockwise Solenoid
@@ -163,47 +164,14 @@ void loop() {                                                   //loop function,
 */
 //camera -------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
-  /*if(!firstCameraStart) {                                     //start video on startup
-    digitalWrite(cameraVideo, HIGH);
-    delay(150);
-    digitalWrite(cameraVideo, LOW);
-    firstCameraStart = true;
-  }*/
-/*
- if(launchState != 4 || launchState != 0) {                                      //take pictures anytime vehicle has not landed
-    if((pictureTime) >= 40) { 
-      digitalWrite(cameraPicture, HIGH);
-      delay(50);
-      digitalWrite(cameraPicture, LOW);
-      pictureTime = 0;
-    } else { 
-      pictureTime += 1;
-      delay(50);
-    }
-  }
-*/
-  if(launchState != 4) {  
-
-  }
-  
-    digitalWrite(cameraPicture, HIGH);
-    delay(5000);
+ if(launchState != 4) {   
+  if (millis() - pictureTime >= 2000){  
     digitalWrite(cameraPicture, LOW);
-    delay(2000);
-  
-  int currentTime = int(millis());
-  if (currentTime - pictureTime >= 2000){ 
-    pictureTime = int(millis());
+    delay(50);
+    digitalWrite(cameraPicture, HIGH);
+    pictureTime = millis();
   }
-  
-  /*if(launchState == 5) { 
-    if(!stoppedVideo) {
-      digitalWrite(cameraVideo, HIGH);
-      delay(550);
-      digitalWrite(cameraVideo, LOW);
-      stoppedVideo = true;
-    }
-  }*/
+ }
 
 //extra ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- NEEDS TESTING
 
@@ -216,6 +184,5 @@ void loop() {                                                   //loop function,
   }
 
   packetcount += 1;
-  seconds = (millis()/1000);
   delay(200);                                               //delay 0.20 sec - ends up being 0.25 with the picture delay
 }
