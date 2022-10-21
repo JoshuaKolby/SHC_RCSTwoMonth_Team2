@@ -108,7 +108,7 @@ void setup() {
   }
   */
   
-  Serial.println("TEAM_ID, PACKET_COUNT, SW_STATE, CAM_STATE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z, REAL_TIME_H:REAL_TIME_M:REAL_TIME_S, PRESSURE, LAT, LONG, SIV");
+  SDCard.println("TEAM_ID, PACKET_COUNT, SW_STATE, CAM_STATE, ALTITUDE, TEMP, ACC_X, ACC_Y, ACC_Z, GYRO_X, GYRO_Y, GYRO_Z, REAL_TIME_H:REAL_TIME_M:REAL_TIME_S, PRESSURE, LAT, LONG, SIV");
   //startingaltitude = bmp388.getMeasurements(altitude);
 
 }
@@ -249,7 +249,7 @@ void loop() {                           //loop function, make sure last print st
 
 //Function to Send Packets 
 void send_Packet() {
-  Serial.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(altitude) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV);
+  SDCard.println(String(TEAM_ID) + "," + String(millis()) + ", " + String(PACKET_COUNT) + ", " + String(SW_STATE) + ", " + String(CAM_STATE) + ", " + String(altitude) + ", " + String(TEMP) + ", " + String(ACC_X) + ", " + String(ACC_Y) + ", " + String(ACC_Z) + ", " + String(GYRO_X) + ", " + String(GYRO_Y) + ", " + String(GYRO_Z) + ", " + String(REAL_TIME_H) + ":" + String(REAL_TIME_M) + ":" + String(REAL_TIME_S) + ", " + String(PRESSURE) + ", " + String(LAT) + ", " + String(LONG) + ", " + String(SIV);
     packetcount += 1;
 }
 
