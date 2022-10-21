@@ -31,7 +31,6 @@ float timeBetweenFires = 1;
 int ledcounter = 4;                                              //the amount of time between blinks (ledcounter/4) = the amount of blinks per second
 int packetcount;                                                 //amount of packets we've collected
 int launchState;                                                 //what state the vehicle is in
-bool stabilize;                                                  //bool to enable stabilization
 bool stabilizealt;                                               //bool to signal if the altitude has been passed to start stabilizing
 bool ascending;                                                  //bool signaling if the vehicle is ascending or not
 bool stoppedVideo;
@@ -89,7 +88,6 @@ void setup() {
   pinMode(cameraPicture, OUTPUT);
   pinMode(cameraVideo, OUTPUT);
   pinMode(ledPin, OUTPUT);  
-  stabilize = false;
   stabilizealt = false;
   stoppedVideo = false;
   videoOnMain = false;
