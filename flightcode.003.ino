@@ -174,12 +174,12 @@ void loop() {                           //loop function, make sure last print st
   if(altitude_BMP >= altForStabilization) {stabilizealt = true;}                               //turn on at altitude
   else { stabilizealt = false;}
   
-  if(gz >= maxDegSec && stabilizealt && (timeBetweenFires/2) >= 1) {                       //determine if we need to turn on Clockwise Solenoid
+  if(gz > maxDegSec && stabilizealt && (timeBetweenFires/2) >= 1) {                       //determine if we need to turn on Clockwise Solenoid
     digitalWrite(SolenoidClockwise, HIGH);
     timeBetweenFires = 0;                                                  
   } else { digitalWrite(SolenoidClockwise, LOW); }
  
-  if(gz <= -maxDegSec && stabilizealt && (timeBetweenFires/2) >= 1) {                      //determine if we need to turn on Counter Clockwise Solenoid
+  if(gz < -maxDegSec && stabilizealt && (timeBetweenFires/2) >= 1) {                      //determine if we need to turn on Counter Clockwise Solenoid
     digitalWrite(SolenoidCounterClockwise, HIGH);
     timeBetweenFires = 0;
   } else { digitalWrite(SolenoidCounterClockwise, LOW); }
